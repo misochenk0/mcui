@@ -1,5 +1,3 @@
-@import '~bourbon/core/bourbon';
-
 /* GLOBAL MIXINS
 --------------------------------------------- */
 
@@ -15,6 +13,22 @@
 
   @include responsive-font(5vw, 35px, 150px, 50px);
 */
+
+@mixin size($width, $height: $width) {
+  width: $width;
+  height: $height;
+}
+@mixin ellipsis(
+  $width: 100%,
+  $display: inline-block
+) {
+  display: $display;
+  max-width: $width;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-wrap: normal;
+}
 @mixin responsive-font($responsive, $min, $max: false, $fallback: false) {
   $responsive-unitless: calc(#{$responsive} / (#{$responsive} - #{$responsive} + 1));
   $dimension: if(unit($responsive) == "vh", "height", "width");

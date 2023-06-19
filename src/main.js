@@ -1,14 +1,9 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
 import WebFontLoader from '../src/utils/webFontLoader' // eslint-disable-line no-unused-vars
-import VueLazyload from 'vue-lazyload'
-Vue.use(VueLazyload)
 
-Vue.config.productionTip = false
-Vue.prototype.toJSON = function() {
-    return this
-}
+const app = createApp(App)
 
-new Vue({
-    render: h => h(App),
-}).$mount('#app')
+app.config.productionTip = false
+
+app.mount('#app')
