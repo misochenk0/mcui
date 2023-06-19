@@ -20,11 +20,10 @@ const McTitle = (props, context) => {
         class: 'mc-title__text',
         style: contentStyle,
     }
-    if (context.domProps && context.domProps.innerHTML) {
-        contentOptions.domProps = {
-            innerHTML: context.domProps.innerHTML,
-        }
+    if (context.attrs?.innerHTML) {
+        contentOptions.innerHTML = context.attrs.innerHTML
     }
+    console.log(contentOptions)
 
     values.forEach((value) => {
         responsivePropsClasses[`mc-title--${value}-${props[value]}`] = props[value]
@@ -63,12 +62,14 @@ const McTitle = (props, context) => {
     const functionCall = (func) => {
         return typeof func === 'function' ? func() : null
     }
+    const attrs = context.attrs
+    delete attrs.innerHTML
     return h(
         'div',
         {
             class: classes,
             style,
-            ...context.attrs,
+            ...attrs,
         },
         [
             functionCall(context.slots['icon-prepend']),
