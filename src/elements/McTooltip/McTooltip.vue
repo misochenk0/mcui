@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { VTooltip } from 'v-tooltip'
+import { VTooltip } from 'floating-vue'
 
 VTooltip.options.defaultBoundariesElement = 'window'
 
