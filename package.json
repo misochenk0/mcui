@@ -1,7 +1,7 @@
 {
   "name": "mediacube-ui",
-  "version": "0.1.53",
-  "description": "Design system for Mediacube services",
+  "version": "0.3.0",
+  "description": "Design system for Mediacube services (Vue 3)",
   "author": "Mediacube",
   "private": false,
   "homepage": "https://mediacube.io",
