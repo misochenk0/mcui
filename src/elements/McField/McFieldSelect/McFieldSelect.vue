@@ -4,8 +4,8 @@
             <!-- @slot Слот заголовка -->
             <slot name="header">
                 <mc-title v-if="hasTitle" :ellipsis="false" max-width="100%" weight="medium">{{
-                        computedTitle
-                    }}</mc-title>
+                    computedTitle
+                }}</mc-title>
             </slot>
         </div>
         <div class="mc-field-select__main">
@@ -15,7 +15,8 @@
                 @input="handleChange"
                 @tag="handleTag"
                 @search-change="handleSearchChange"
-                @open="repositionDropDown"
+                @open="handleOpen"
+                @close="handleClose"
             >
                 <template slot="singleLabel" slot-scope="{ option }">
                     <mc-preview v-if="optionWithPreview" class="option__desc" size="l">
@@ -98,7 +99,6 @@ import McSvgIcon from '../../McSvgIcon/McSvgIcon'
 import McPreview from '../../../patterns/McPreview/McPreview'
 import fieldErrors from '../../../mixins/fieldErrors'
 import equalFieldHeight from '../../../mixins/equalFieldHeight'
-import { LANGUAGES } from '../../../helpers/consts'
 export default {
     name: 'McFieldSelect',
     components: { McSvgIcon, McAvatar, McTitle, McTooltip, MultiSelect, McPreview },
@@ -302,18 +302,12 @@ export default {
             type: Boolean,
             default: false,
         },
-        /**
-         * Для какого языка селект
-         */
-        locale: {
-            type: String,
-            default: null,
-        },
     },
     data() {
         return {
             searchValue: null,
             key: `field_select_${Date.now()}`,
+            closest_scroll_element: null,
         }
     },
     computed: {
@@ -361,7 +355,6 @@ export default {
                 'mc-field-select--is-empty-options-list': this.isEmptyOptionsList,
                 'mc-field-select--with-preview': this.optionWithPreview,
                 'mc-field-select--max-height': this.maxHeight,
-                'mc-field-select--rtl': LANGUAGES.rtl.includes(this.locale),
             }
         },
         computedTitle() {
@@ -416,11 +409,38 @@ export default {
         },
     },
     methods: {
-        repositionDropDown() {
+        handleOpen() {
             if (!this.renderAbsoluteList) return
+            this.repositionDropDown()
+            this.initScroll()
+        },
+        handleClose() {
+            this.closest_scroll_element?.removeEventListener('scroll', this.repositionDropDown)
+        },
+        findClosestScrollElement(element) {
+            if (!element) return document.documentElement
+
+            const {  overflow, overflowY  } = getComputedStyle(element)
+
+            if (overflow === 'auto' || overflow === 'scroll' || overflowY === 'auto' || overflowY === 'scroll') {
+                return element
+            }
+
+            return this.findClosestScrollElement(element.parentNode)
+        },
+        initScroll() {
+            // looking for closest scroll elemen to track select list position dynamically
+            this.closest_scroll_element = this.findClosestScrollElement(this.$refs.field)
+
+            this.closest_scroll_element.addEventListener('scroll', this.repositionDropDown)
+        },
+        repositionDropDown() {
             const { top, height, width, left } = this.$el.getBoundingClientRect()
             const ref = this.$refs[this.key]
-
+            // if field hides under scrolled element borders -> blur select to prevent overlap
+            if (this.closest_scroll_element?.scrollTop - this.$refs.field.clientHeight - this.$el.offsetTop > 0) {
+                return ref.$refs.search.blur()
+            }
             if (ref) {
                 ref.$refs.list.style.width = `${width}px`
                 ref.$refs.list.style.position = 'fixed'
@@ -596,7 +616,6 @@ $text-white: scale-color($color-white, $alpha: -10%);
             border-radius: $radius-100 !important;
             padding: 0 $space-500 0 $space-100;
             overflow: hidden;
-            text-align: start;
             &:hover {
                 border-color: $color-purple;
             }
@@ -621,7 +640,6 @@ $text-white: scale-color($color-white, $alpha: -10%);
             font-family: $font-family-main;
             margin-top: $space-50;
             margin-bottom: $space-50;
-            margin-right: unset;
             background-color: $color-lighter-purple;
             color: $color-black;
             padding: $size-50 $size-50 $size-50 $size-100;
@@ -914,67 +932,55 @@ $text-white: scale-color($color-white, $alpha: -10%);
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    &--rtl {
-        direction: rtl;
-    }
-
-    @at-root {
-        #{$block-name}--rtl,
-        html[dir='rtl'] #{$block-name} {
-            &__single-label {
-                @include child-indent-right(0);
-                @include child-indent-left-rtl($space-50);
+}
+html[dir='rtl'] {
+    .mc-field-select {
+        &__single-label {
+            @include child-indent-right(0);
+            @include child-indent-left-rtl($space-50);
+        }
+        &__label-text {
+            padding-left: 0;
+            padding-right: $space-50;
+            &--indent-left {
+                margin-left: 0;
+                margin-right: $space-300;
             }
-            &__label-text {
+        }
+
+        .multiselect {
+            &__placeholder {
                 padding-left: 0;
                 padding-right: $space-50;
-                &--indent-left {
-                    margin-left: 0;
-                    margin-right: $space-300;
-                }
             }
 
+            &__single {
+                padding-right: 0;
+            }
+
+            &__input {
+                padding-left: 0;
+                padding-right: $space-50;
+            }
+            &__tags-wrap {
+                @include child-indent-right(0);
+                @include child-indent-left-rtl($space-100);
+            }
+            &__tags {
+                padding: 0 $space-100 0 $space-500;
+            }
+            &__select {
+                right: unset;
+                left: 1px;
+            }
+        }
+        &--with-preview {
+            .mc-preview {
+                align-items: center;
+            }
             .multiselect {
-                &__placeholder {
-                    padding-left: 0;
-                    padding-right: $space-50;
-                    width: 100%;
-                }
-
-                &__single {
-                    padding-right: 0;
-                }
-
-                &__input {
-                    padding-left: 0;
-                    padding-right: $space-50;
-                }
-                &__tags-wrap {
-                    @include child-indent-right(0);
-                    @include child-indent-left-rtl($space-100);
-                }
-                &__tag-icon {
-                    margin-left: unset;
-                    margin-right: 7px;
-                }
                 &__tags {
-                    padding: 0 $space-100 0 $space-500;
-                    text-align: right;
-                }
-                &__select {
-                    right: unset;
-                    left: 1px;
-                }
-            }
-            &--with-preview {
-                .mc-preview {
-                    align-items: center;
-                }
-                .multiselect {
-                    &__tags {
-                        padding: $space-200 $space-150;
-                    }
+                    padding: $space-200 $space-150;
                 }
             }
         }
